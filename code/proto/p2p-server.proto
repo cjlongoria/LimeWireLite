@@ -1,0 +1,165 @@
+syntax = "proto3";
+package p2pft;
+
+// This is the services the index server will use
+service Greeter {
+    rpc ListFiles (ListRequest) returns (ListReply);
+    rpc Register (register_request) returns (register_reply);
+    rpc Deregister (deregister_request) returns (register_reply);
+    rpc Search (SearchRequest) returns (SearchReply);
+    // ***************Start Change***************
+    rpc Query (QueryInitial) returns (GenericReply);
+    // ***************End Change***************
+}
+
+// This is the file transfer service that the clients offer to each other
+service Ftp {
+    rpc receive (ReceiveRequest) returns (ReceiveReply);
+    // ***************Start Change***************
+    rpc update (UpdateRequest) returns (GenericReply);
+    rpc delete (DeleteRequest) returns (GenericReply);
+    rpc refresh (GenericReply) returns (GenericReply);
+    rpc ttr_check (GenericReply) returns (GenericReply);
+    rpc file_status (ReceiveRequest) returns (FileStatusReply);
+    rpc state_change (StateUpdate) returns (GenericReply);
+    // ***************End Change***************
+}
+
+// This is the query server (middleware) that handles the passing and storing of queries
+service QueryEngine {
+    // ***************Start Change***************
+    rpc receive (QueryInitial) returns (GenericReply);
+    rpc check (GenericReply) returns (CheckReply);
+    // ***************End Change***************
+    rpc process (GenericReply) returns (GenericReply);
+    rpc response (QueryResponse) returns (GenericReply);
+    rpc response_read (GenericReply) returns (QueryReply);
+    rpc clear (GenericReply) returns (GenericReply);
+    rpc broadcast (QueryBroadcast) returns (GenericReply);
+    rpc broadcast_response (GenericReply) returns (GenericReply);
+    rpc cache_clear (GenericReply) returns (GenericReply);
+}
+
+
+message ListRequest {
+   uint64 request = 1;
+}
+
+message ListReply {
+    repeated string files = 1;
+}
+
+message SearchRequest {
+    uint64 request = 1;
+    string filename = 2;
+    string ip_qe = 3;
+}
+
+message SearchReply {
+    repeated string ips = 1;
+    repeated uint64 ids = 2;
+    string file = 3;
+    // ***************Start Change***************
+    repeated string ips_qe = 4;
+    repeated uint64 states = 5;
+    // ***************End Change***************
+}
+
+message register_request{
+    uint64 hash = 1;
+    uint64 state = 2;
+    string ip = 3;
+    repeated string files = 4;
+    // ***************Start Change***************
+    string ip_qe = 5;
+    repeated uint64 file_states = 6;
+    // ***************End Change***************
+}
+
+message register_reply{
+    int32 reply = 1;
+}
+
+message deregister_request{
+    uint64 hash = 1;
+}
+
+message ReceiveRequest{
+    string filename = 1;
+}
+
+message ReceiveReply{
+    bytes file_bytes = 1;
+    uint64 ttr = 2;
+    uint64 expire_time = 3;
+    uint64 state = 4;
+    string ip = 5;
+
+}
+
+message GenericReply{
+    int32 reply = 1;
+}
+
+message QueryResponse {
+    uint64 id = 1;
+    string file = 2;
+    string return_ip = 3;
+    uint32 seq_num = 4;
+    repeated string client_list = 5;
+    // ***************Start Change***************
+    uint32 mess_type = 6;
+    repeated uint64 states = 7;
+    // ***************End Change ***************
+}
+
+message QueryBroadcast {
+    uint64 id = 1;
+    string file = 2;
+    string return_ip = 3;
+    uint32 seq_num = 4;
+    uint32 ttl = 5;
+    // ***************Start Change***************
+    uint32 mess_type = 6;
+    // ***************End Change ***************
+}
+
+message QueryReply {
+    repeated string ips = 1;
+    repeated uint64 states = 2;
+}
+
+// ***************Start Change***************
+message QueryInitial {
+    uint64 request = 1;
+    string filename = 2;
+    string ip_qe = 3;
+    uint32 mess_type =4;
+}
+
+message UpdateRequest{
+    string filename = 1;
+    string ip = 2;
+    uint64 ttr = 3;
+    uint64 expire_time = 4;
+    uint64 state = 5;
+}
+
+message CheckReply {
+    repeated string filenames = 1;
+}
+
+message DeleteRequest {
+    string filename = 1;
+}
+
+message FileStatusReply{
+    uint64 ttr = 1;
+    uint64 state = 3;
+}
+
+message StateUpdate{
+    string filename = 1;
+    uint64 state = 2;
+}
+// ***************End Change ***************
